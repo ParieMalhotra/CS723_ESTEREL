@@ -1,0 +1,22 @@
+
+
+module CarCruiseControlState;
+
+	input ON;
+	input OFF;
+	input Resume;
+	input AccelPressed;
+	input BrakePressed;
+	input SpeedOutofBounds;
+	
+	output CruiseState : integer;
+	
+	var SystemState := 0 : integer in
+
+	loop
+	end loop;
+
+
+
+	end var
+end module;
