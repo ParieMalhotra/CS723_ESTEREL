@@ -11,9 +11,9 @@ output o_AccelPressed
 output o_SpeedOutofBounds;
 
 [
-	var PedalsMin : 3.0f : float in
-	var SpeedMax  : 150.0f : float in
-	var SpeedMin  : 30.0f : float in
+	var PedalsMin := 3.0f : float in
+	var SpeedMax  := 150.0f : float in
+	var SpeedMin  := 30.0f : float in
 	loop
 		if (?i_Brake) > PedalsMin then
 			emit o_BrakePressed;
