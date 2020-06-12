@@ -1,6 +1,6 @@
 
 
-module CarCruiseControlState;
+module CarCruiseControlState:
 
 	input ON;
 	input OFF;
