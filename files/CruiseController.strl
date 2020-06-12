@@ -78,7 +78,7 @@ module CarCruiseControlState:
 
 ]
 
-	end var
+	end var;
 end module
 
 
@@ -157,7 +157,7 @@ output o_ThrottleCMD : float;
 	loop
 	%If CruiseControl is in ON State
 	if(?i_CruiseState) = 1 then
-		if prev_state != 0 then
+		if not(prev_state = 0) then
 			emit o_ThrottleCMD(regulateThrottle(true,(?i_CruiseSpeed),(?i_VehicleSpeed)));
 		else
 			emit o_ThrottleCMD(regulateThrottle(false,(?i_CruiseSpeed),(?i_VehicleSpeed)));
@@ -172,19 +172,19 @@ output o_ThrottleCMD : float;
 	end loop;
 	end var;
 ]
-end module;
+end module
 
 
 
 
-module PedalDetection :
+module CarPedalDetection :
 
 input i_Speed : float;
 input i_Brake : float;
 input i_Accel : float;
 
 output o_BrakePressed;
-output o_AccelPressed
+output o_AccelPressed;
 output o_SpeedOutofBounds;
 
 [
@@ -250,7 +250,7 @@ module TopLevel:
 		emit CruiseState(?s_state);
 
 		await tick;
-	end loop
+	end loop;
 	
 	||
 	
@@ -287,12 +287,12 @@ module TopLevel:
 									s_brake/o_BrakePressed,
 									s_accel/o_AccelPressed,
 									s_SOB/o_SpeedOutofBounds]
-									
+]							
 	end signal;
 	end signal;
 	end signal;
 	end signal;
 	end signal;
 	end signal;
-]
+
 end module
