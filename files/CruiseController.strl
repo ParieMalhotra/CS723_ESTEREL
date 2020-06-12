@@ -1,0 +1,294 @@
+% Complete file with all modules
+
+
+module CarCruiseControlState:
+
+	input i_ON;
+	input i_OFF;
+	input i_Resume;
+	input i_AccelPressed;
+	input i_BrakePressed;
+	input i_SpeedOutofBounds;
+	
+	output o_CruiseState : integer;
+	
+	var SystemState := 0 : integer in
+	%StateNumebrs
+	% 0: OFF
+	% 1: ON
+	% 2: DISABLE
+	% 3: STNBY
+[	
+
+	loop
+	%OFF STATE
+	if SystemState = 0 then 
+		
+		present ON then
+			SystemState := 1
+		else
+			SystemState := 0;
+		end present;
+	end if;
+	if SystemState = 1 then
+		
+		present BrakePressed then
+			SystemState := 3;
+		else present AccelPressed or SpeedOutofBounds then
+			SystemState := 2;
+		end present;
+		
+	end if;
+	if SystemState = 2 then
+	
+		present not AccelPressed and  not SpeedOutofBounds then
+			SystemState := 1;
+		else
+			SystemState := 2;
+		end present;
+	end if;
+	if SystemState = 3 then
+	
+		present Resume then
+			present SpeedOutofBounds then
+				SystemState := 2;
+				
+			else 
+				present AccelPressed then
+					SystemState := 2;
+				else
+					SystemState := 1;
+				end present;
+			end present;
+		
+		end present;
+	
+	end if;
+	%OFF input has highest priority
+	present Off then
+		SystemState := 0;
+	end present;
+	
+	
+	emit o_CruiseState(SystemState);
+	await tick;
+	
+	end loop;
+
+]
+
+	end var
+end module;
+
+
+
+
+module CarCruiseSpeedManagement :
+
+input i_CruiseState : integer;
+input i_Set;
+input i_QuickAccel;
+input i_QuickDecel;
+input i_VehicleSpeed : float;
+
+output o_CruiseSpeed : float;
+
+var SpeedMax := 150.0f : float in
+var SpeedMin := 30.0f : float in
+var SpeedInc := 2.5f	: float in
+var v_CruiseSpeed := 0 : float in
+[
+	loop
+		if (?i_CruiseState = 1) or (?i_CruiseState = 2) or (?i_CruiseState = 3)then
+			
+			if (?Set = 1) then
+				emit o_CruiseSpeed(?i_VehicleSpeed)
+			end if;
+			
+			if (?QuickAccel = 1) then
+				if (v_CruiseSpeed + SpeedInc) <= SpeedMax then
+					v_CruiseSpeed := v_CruiseSpeed + SpeedInc;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				else
+					v_CruiseSpeed := Max;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				end if;
+			end if;
+			
+			if (?QuickDecel = 1) then
+				if (v_CruiseSpeed - SpeedInc) >= SpeedMin then
+					v_CruiseSpeed := v_CruiseSpeed - SpeedInc;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				else
+					v_CruiseSpeed := Min;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				end if;
+			end if;
+		
+		end if;
+		await tick;
+	end loop;
+]
+
+end var;
+end var;
+end var;
+end var;
+
+end module;
+
+
+
+
+module CarDrivingControl:
+
+
+function regulateThrottle(boolean, float, float): float;
+%Inputs
+input i_CruiseState: integer;
+input i_CruiseSpeed: float;
+input i_VehicleSpeed: float;
+input i_Accel: float;
+%Output
+output o_ThrottleCMD : float;
+[
+	var prev_state:= 0 : integer in
+	loop
+	%If CruiseControl is in ON State
+	if(?i_CruiseState) = 1 then
+		if prev_state != 0 then
+			emit o_ThrottleCMD(regulateThrottle(true,(?i_CruiseSpeed),(?i_VehicleSpeed)));
+		else
+			emit o_ThrottleCMD(regulateThrottle(false,(?i_CruiseSpeed),(?i_VehicleSpeed)));
+		end if;
+	%Throttle controlled by Accel then
+	else
+		emit o_ThrottleCMD(?i_Accel);
+	end if;
+	%Update the previous state variable with this current state value
+	prev_state := (?i_CruiseState);
+	await tick;
+	end loop;
+	end var;
+]
+end module;
+
+
+
+
+module PedalDetection :
+
+input i_Speed : float;
+input i_Brake : float;
+input i_Accel : float;
+
+output o_BrakePressed;
+output o_AccelPressed
+output o_SpeedOutofBounds;
+
+[
+	var PedalsMin := 3.0f : float in
+	var SpeedMax  := 150.0f : float in
+	var SpeedMin  := 30.0f : float in
+	loop
+		if (?i_Brake) > PedalsMin then
+			emit o_BrakePressed;
+		end if;
+		
+		if (?i_Accel) > PedalsMin then
+			emit o_AccelPressed;
+		end if;
+		
+		if (?i_Speed) > SpeedMax then
+			emit o_SpeedOutofBounds;
+		elsif (?i_Speed) < SpeedMin then
+			emit o_SpeedOutofBounds;
+		end if;
+		
+		await tick;
+	
+	end loop;
+	end var;
+	end var;
+	end var;
+
+]
+end module;
+
+
+
+
+module TopLevel:
+
+	input ON;
+	input OFF;
+	input Resume;
+	input Set;
+	input QuickDecel;
+	input QuickAccel;
+	input Accel : float;
+	input Brake : float;
+	input Speed : float;
+	
+	output CruiseSpeed : float;
+	output ThrottleCmd : float;
+	output CruiseState : integer;
+	
+	signal s_accel in
+	signal s_brake in
+	signal s_SOB in
+	signal s_speed := 0.0f : float in
+	signal s_throttle := 0.0f : float in
+	signal s_state := 0 : integer in
+	
+	loop
+		emit CruiseSpeed(?s_speed);
+		emit ThrottleCmd(?s_throttle);
+		emit CruiseState(?s_state);
+
+		await tick;
+	end loop
+	
+	||
+	
+	run CarCruiseControlState[signal 	ON/i_ON,
+										OFF/i_OFF,
+										Resume/i_Resume,
+										s_accel/i_AccelPressed,
+										s_brake/i_BrakePressed,
+										s_SOB/i_SpeedOutofBounds,
+										s_state/o_CruiseState]
+	
+	||
+	
+	run CarCruiseSpeedManagement[signal	s_state/i_CruiseState,
+										Set/i_Set,
+										QuickAccel/i_QuickAccel,
+										QuickDecel/i_QuickDecel,
+										Speed/i_VehicleSpeed,
+										s_speed/o_CruiseSpeed]
+	
+	||
+	
+	run CarDrivingControl[signal	s_state/i_CruiseState,
+									s_speed/i_CruiseSpeed,
+									Speed/i_VehicleSpeed,
+									Accel/i_Accel,
+									s_throttle/o_ThrottleCMD]
+	
+	||
+	
+	run CarPedalDetection[signal 	Speed/i_Speed,
+									Brake/i_Brake,
+									Accel/i_Accel,
+									s_brake/o_BrakePressed,
+									s_accel/o_AccelPressed,
+									s_SOB/o_SpeedOutofBounds]
+									
+	end signal
+	end signal;
+	end signal;
+	end signal;
+	end signal;
+	end signal;
+end module
