@@ -24,7 +24,7 @@ module CarCruiseControlState:
 	%OFF STATE
 	if SystemState = 0 then 
 		
-		present ON then
+		present i_ON then
 			SystemState := 1
 		else
 			SystemState := 0;
@@ -32,16 +32,17 @@ module CarCruiseControlState:
 	end if;
 	if SystemState = 1 then
 		
-		present BrakePressed then
+		present i_BrakePressed then
 			SystemState := 3;
-		else present AccelPressed or SpeedOutofBounds then
-			SystemState := 2;
+		else 
+			present i_AccelPressed or i_SpeedOutofBounds then
+				SystemState := 2;
+			end present;
 		end present;
-		
 	end if;
 	if SystemState = 2 then
 	
-		present not AccelPressed and  not SpeedOutofBounds then
+		present not i_AccelPressed and  not i_SpeedOutofBounds then
 			SystemState := 1;
 		else
 			SystemState := 2;
@@ -49,12 +50,12 @@ module CarCruiseControlState:
 	end if;
 	if SystemState = 3 then
 	
-		present Resume then
-			present SpeedOutofBounds then
+		present i_Resume then
+			present i_SpeedOutofBounds then
 				SystemState := 2;
 				
 			else 
-				present AccelPressed then
+				present i_AccelPressed then
 					SystemState := 2;
 				else
 					SystemState := 1;
@@ -65,7 +66,7 @@ module CarCruiseControlState:
 	
 	end if;
 	%OFF input has highest priority
-	present Off then
+	present i_OFF then
 		SystemState := 0;
 	end present;
 	
@@ -78,7 +79,7 @@ module CarCruiseControlState:
 ]
 
 	end var
-end module;
+end module
 
 
 
@@ -96,34 +97,34 @@ output o_CruiseSpeed : float;
 var SpeedMax := 150.0f : float in
 var SpeedMin := 30.0f : float in
 var SpeedInc := 2.5f	: float in
-var v_CruiseSpeed := 0 : float in
+var v_CruiseSpeed := 0.0f : float in
 [
 	loop
 		if (?i_CruiseState = 1) or (?i_CruiseState = 2) or (?i_CruiseState = 3)then
 			
-			if (?Set = 1) then
+			present i_Set then
 				emit o_CruiseSpeed(?i_VehicleSpeed)
-			end if;
+			end present;
 			
-			if (?QuickAccel = 1) then
+			present i_QuickAccel then
 				if (v_CruiseSpeed + SpeedInc) <= SpeedMax then
 					v_CruiseSpeed := v_CruiseSpeed + SpeedInc;
 					emit o_CruiseSpeed(v_CruiseSpeed);
 				else
-					v_CruiseSpeed := Max;
+					v_CruiseSpeed := SpeedMax;
 					emit o_CruiseSpeed(v_CruiseSpeed);
 				end if;
-			end if;
+			end present;
 			
-			if (?QuickDecel = 1) then
+			present i_QuickDecel then
 				if (v_CruiseSpeed - SpeedInc) >= SpeedMin then
 					v_CruiseSpeed := v_CruiseSpeed - SpeedInc;
 					emit o_CruiseSpeed(v_CruiseSpeed);
 				else
-					v_CruiseSpeed := Min;
+					v_CruiseSpeed := SpeedMin;
 					emit o_CruiseSpeed(v_CruiseSpeed);
 				end if;
-			end if;
+			end present;
 		
 		end if;
 		await tick;
@@ -135,7 +136,7 @@ end var;
 end var;
 end var;
 
-end module;
+end module
 
 
 
@@ -213,7 +214,7 @@ output o_SpeedOutofBounds;
 	end var;
 
 ]
-end module;
+end module
 
 
 
@@ -240,6 +241,8 @@ module TopLevel:
 	signal s_speed := 0.0f : float in
 	signal s_throttle := 0.0f : float in
 	signal s_state := 0 : integer in
+
+[
 	
 	loop
 		emit CruiseSpeed(?s_speed);
@@ -285,10 +288,11 @@ module TopLevel:
 									s_accel/o_AccelPressed,
 									s_SOB/o_SpeedOutofBounds]
 									
-	end signal
 	end signal;
 	end signal;
 	end signal;
 	end signal;
 	end signal;
+	end signal;
+]
 end module
