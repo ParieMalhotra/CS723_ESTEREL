@@ -37,4 +37,4 @@ output o_SpeedOutofBounds;
 	end var;
 
 ]
-end module
+end module;
