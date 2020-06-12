@@ -2,14 +2,14 @@
 
 module CarCruiseControlState:
 
-	input ON;
-	input OFF;
-	input Resume;
-	input AccelPressed;
-	input BrakePressed;
-	input SpeedOutofBounds;
+	input i_ON;
+	input i_OFF;
+	input i_Resume;
+	input i_AccelPressed;
+	input i_BrakePressed;
+	input i_SpeedOutofBounds;
 	
-	output CruiseState : integer;
+	output o_CruiseState : integer;
 	
 	var SystemState := 0 : integer in
 	%StateNumebrs

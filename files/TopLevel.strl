@@ -1,0 +1,66 @@
+
+
+module TopLevel:
+
+	input ON;
+	input OFF;
+	input Resume;
+	input Set;
+	input QuickDecel;
+	input QuickAccel;
+	input Accel : float;
+	input Brake : float;
+	input Speed : float;
+	
+	output CruiseSpeed : float;
+	output ThrottleCmd : float;
+	output CruiseState : integer;
+	
+	signal s_accel;
+	signal s_brake;
+	signal s_SOB;
+	signal s_speed : float := 0.0f;
+	signal s_throttle : float := 0.0f;
+	signal s_state : integer := 0;
+	
+	loop
+		emit CruiseSpeed(?speed);
+		emit ThrottleCmd(?throttle);
+		emit CruiseState(?state);
+	end loop
+	
+	||
+	
+	run CarCruiseControlState[signal 	ON/i_ON,
+										OFF/i_OFF,
+										Resume/i_Resume,
+										s_accel/i_AccelPressed,
+										s_brake/i_BrakePressed,
+										s_SOB/i_SpeedOutofBounds,
+										s_state/o_CruiseState]
+	
+	||
+	
+	run CarCruiseSpeedManagement[signal	s_state/i_CruiseState,
+										Set/i_Set,
+										QuickAccel/i_QuickAccel,
+										QuickDecel/i_QuickDecel,
+										Speed/i_VehicleSpeed,
+										s_speed/o_CruiseSpeed]
+	
+	||
+	
+	run CarDrivingControl[signal	s_state/i_CruiseState,
+									s_speed/i_CruiseSpeed,
+									Speed/i_VehicleSpeed,
+									Accel/i_Accel,
+									s_throttle/o_ThrottleCMD]
+	
+	||
+	
+	run CarPedalDetection[signal 	Speed/i_Speed,
+									Brake/i_Brake,
+									Accel/i_Accel,
+									s_brake/o_BrakePressed,
+									s_accel/o_AccelPressed,
+									s_SOB/o_SpeedOutofBounds]
