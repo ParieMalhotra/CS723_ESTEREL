@@ -64,3 +64,11 @@ module TopLevel:
 									s_brake/o_BrakePressed,
 									s_accel/o_AccelPressed,
 									s_SOB/o_SpeedOutofBounds]
+									
+	end signal
+	end signal;
+	end signal;
+	end signal;
+	end signal;
+	end signal;
+end module
