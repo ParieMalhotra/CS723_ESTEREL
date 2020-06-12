@@ -16,17 +16,19 @@ module TopLevel:
 	output ThrottleCmd : float;
 	output CruiseState : integer;
 	
-	signal s_accel;
-	signal s_brake;
-	signal s_SOB;
-	signal s_speed : float := 0.0f;
-	signal s_throttle : float := 0.0f;
-	signal s_state : integer := 0;
+	signal s_accel in
+	signal s_brake in
+	signal s_SOB in
+	signal s_speed := 0.0f : float in
+	signal s_throttle := 0.0f : float in
+	signal s_state := 0 : integer in
 	
 	loop
-		emit CruiseSpeed(?speed);
-		emit ThrottleCmd(?throttle);
-		emit CruiseState(?state);
+		emit CruiseSpeed(?s_speed);
+		emit ThrottleCmd(?s_throttle);
+		emit CruiseState(?s_state);
+
+		await tick;
 	end loop
 	
 	||
