@@ -103,7 +103,14 @@ var v_CruiseSpeed := 0.0f : float in
 		if (?i_CruiseState = 1) or (?i_CruiseState = 2) or (?i_CruiseState = 3)then
 			
 			present i_Set then
-				emit o_CruiseSpeed(?i_VehicleSpeed)
+				if (?i_VehicleSpeed) < SpeedMin then
+					v_CruiseSpeed:= SpeedMin;
+				elsif (?i_VehicleSpeed) > SpeedMax then
+					v_CruiseSpeed:= SpeedMin;
+				else
+					v_CruiseSpeed := ?i_VehicleSpeed;
+				end if;
+				emit o_CruiseSpeed(v_CruiseSpeed);
 			end present;
 			
 			present i_QuickAccel then

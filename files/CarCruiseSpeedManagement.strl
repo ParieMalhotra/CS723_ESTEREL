@@ -19,6 +19,7 @@ var v_CruiseSpeed := 0 : float in
 		if (?i_CruiseState = 1) or (?i_CruiseState = 2) or (?i_CruiseState = 3)then
 			
 			if (?Set = 1) then
+				v_CruiseSpeed := (?i_VehicleSpeed)
 				emit o_CruiseSpeed(?i_VehicleSpeed)
 			end if;
 			
