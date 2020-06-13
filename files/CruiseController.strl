@@ -11,6 +11,7 @@ module CarCruiseControlState:
 	input i_SpeedOutofBounds;
 	
 	output o_CruiseState : integer;
+	output o_firstSet;
 	
 	var SystemState := 0 : integer in
 	%StateNumebrs
@@ -25,7 +26,8 @@ module CarCruiseControlState:
 	if SystemState = 0 then 
 		
 		present i_ON then
-			SystemState := 1
+			SystemState := 1;
+			emit o_firstSet;
 		else
 			SystemState := 0;
 		end present;
@@ -59,6 +61,10 @@ module CarCruiseControlState:
 					SystemState := 2;
 				else
 					SystemState := 1;
+				
+				present i_BrakePressed then
+					SystemState := 3;
+				end present;
 				end present;
 			end present;
 		
@@ -91,6 +97,7 @@ input i_Set;
 input i_QuickAccel;
 input i_QuickDecel;
 input i_VehicleSpeed : float;
+input i_firstSet;
 
 output o_CruiseSpeed : float;
 
@@ -101,6 +108,13 @@ var v_CruiseSpeed := 0.0f : float in
 [
 	loop
 		if (?i_CruiseState = 1) or (?i_CruiseState = 2) or (?i_CruiseState = 3)then
+
+			if (?i_CruiseState = 1) then
+				present i_firstSet then
+					v_CruiseSpeed := ?i_VehicleSpeed;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				end present
+			end if;
 			
 			present i_Set then
 				if (?i_VehicleSpeed) < SpeedMin then
@@ -245,6 +259,7 @@ module TopLevel:
 	signal s_accel in
 	signal s_brake in
 	signal s_SOB in
+	signal s_firstSet in
 	signal s_speed := 0.0f : float in
 	signal s_throttle := 0.0f : float in
 	signal s_state := 0 : integer in
@@ -261,12 +276,13 @@ module TopLevel:
 	
 	||
 	
-	run CarCruiseControlState[signal 	ON/i_ON,
+	run CarCruiseControlState[signal 					ON/i_ON,
 										OFF/i_OFF,
 										Resume/i_Resume,
 										s_accel/i_AccelPressed,
 										s_brake/i_BrakePressed,
 										s_SOB/i_SpeedOutofBounds,
+										s_firstSet/o_firstSet,
 										s_state/o_CruiseState]
 	
 	||
@@ -276,6 +292,7 @@ module TopLevel:
 										QuickAccel/i_QuickAccel,
 										QuickDecel/i_QuickDecel,
 										Speed/i_VehicleSpeed,
+										s_firstSet/i_firstSet,
 										s_speed/o_CruiseSpeed]
 	
 	||
@@ -295,6 +312,7 @@ module TopLevel:
 									s_accel/o_AccelPressed,
 									s_SOB/o_SpeedOutofBounds]
 ]							
+	end signal;
 	end signal;
 	end signal;
 	end signal;
