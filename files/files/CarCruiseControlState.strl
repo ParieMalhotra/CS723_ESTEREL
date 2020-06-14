@@ -1,0 +1,80 @@
+
+
+module CarCruiseControlState:
+
+	input i_ON;
+	input i_OFF;
+	input i_Resume;
+	input i_AccelPressed;
+	input i_BrakePressed;
+	input i_SpeedOutofBounds;
+	
+	output o_CruiseState : integer;
+	
+	var SystemState := 0 : integer in
+	%StateNumebrs
+	% 0: OFF
+	% 1: ON
+	% 2: DISABLE
+	% 3: STNBY
+[	
+
+	loop
+	%OFF STATE
+	if SystemState = 0 then 
+		
+		present ON then
+			SystemState := 1
+		else
+			SystemState := 0;
+		end present;
+	end if;
+	if SystemState = 1 then
+		
+		present BrakePressed then
+			SystemState := 3;
+		else present AccelPressed or SpeedOutofBounds then
+			SystemState := 2;
+		end present;
+		
+	end if;
+	if SystemState = 2 then
+	
+		present not AccelPressed and  not SpeedOutofBounds then
+			SystemState := 1;
+		else
+			SystemState := 2;
+		end present;
+	end if;
+	if SystemState = 3 then
+	
+		present Resume then
+			present SpeedOutofBounds then
+				SystemState := 2;
+				
+			else 
+				present AccelPressed then
+					SystemState := 2;
+				else
+					SystemState := 1;
+				end present;
+			end present;
+		
+		end present;
+	
+	end if;
+	%OFF input has highest priority
+	present Off then
+		SystemState := 0;
+	end present;
+	
+	
+	emit o_CruiseState(SystemState);
+	await tick;
+	
+	end loop;
+
+]
+
+	end var
+end module;

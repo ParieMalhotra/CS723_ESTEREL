@@ -1,0 +1,56 @@
+
+
+module CarCruiseSpeedManagement :
+
+input i_CruiseState : integer;
+input i_Set;
+input i_QuickAccel;
+input i_QuickDecel;
+input i_VehicleSpeed : float;
+
+output o_CruiseSpeed : float;
+
+var SpeedMax := 150.0f : float in
+var SpeedMin := 30.0f : float in
+var SpeedInc := 2.5f	: float in
+var v_CruiseSpeed := 0 : float in
+[
+	loop
+		if (?i_CruiseState = 1) or (?i_CruiseState = 2) or (?i_CruiseState = 3)then
+			
+			if (?Set = 1) then
+				v_CruiseSpeed := (?i_VehicleSpeed)
+				emit o_CruiseSpeed(?i_VehicleSpeed)
+			end if;
+			
+			if (?QuickAccel = 1) then
+				if (v_CruiseSpeed + SpeedInc) <= SpeedMax then
+					v_CruiseSpeed := v_CruiseSpeed + SpeedInc;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				else
+					v_CruiseSpeed := Max;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				end if;
+			end if;
+			
+			if (?QuickDecel = 1) then
+				if (v_CruiseSpeed - SpeedInc) >= SpeedMin then
+					v_CruiseSpeed := v_CruiseSpeed - SpeedInc;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				else
+					v_CruiseSpeed := Min;
+					emit o_CruiseSpeed(v_CruiseSpeed);
+				end if;
+			end if;
+		
+		end if;
+		await tick;
+	end loop;
+]
+
+end var;
+end var;
+end var;
+end var;
+
+end module;

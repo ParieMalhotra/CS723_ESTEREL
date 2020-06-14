@@ -1,0 +1,33 @@
+
+module CarDrivingControl:
+
+
+function regulateThrottle(boolean, float, float): float;
+%Inputs
+input i_CruiseState: integer;
+input i_CruiseSpeed: float;
+input i_VehicleSpeed: float;
+input i_Accel: float;
+%Output
+output o_ThrottleCMD : float;
+[
+	var prev_state:= 0 : integer in
+	loop
+	%If CruiseControl is in ON State
+	if(?i_CruiseState) = 1 then
+		if prev_state != 0 then
+			emit o_ThrottleCMD(regulateThrottle(true,(?i_CruiseSpeed),(?i_VehicleSpeed)));
+		else
+			emit o_ThrottleCMD(regulateThrottle(false,(?i_CruiseSpeed),(?i_VehicleSpeed)));
+		end if;
+	%Throttle controlled by Accel then
+	else
+		emit o_ThrottleCMD(?i_Accel);
+	end if;
+	%Update the previous state variable with this current state value
+	prev_state := (?i_CruiseState);
+	await tick;
+	end loop;
+	end var;
+]
+end module;

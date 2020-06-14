@@ -1,0 +1,40 @@
+
+
+module PedalDetection :
+
+input i_Speed : float;
+input i_Brake : float;
+input i_Accel : float;
+
+output o_BrakePressed;
+output o_AccelPressed
+output o_SpeedOutofBounds;
+
+[
+	var PedalsMin := 3.0f : float in
+	var SpeedMax  := 150.0f : float in
+	var SpeedMin  := 30.0f : float in
+	loop
+		if (?i_Brake) > PedalsMin then
+			emit o_BrakePressed;
+		end if;
+		
+		if (?i_Accel) > PedalsMin then
+			emit o_AccelPressed;
+		end if;
+		
+		if (?i_Speed) > SpeedMax then
+			emit o_SpeedOutofBounds;
+		elsif (?i_Speed) < SpeedMin then
+			emit o_SpeedOutofBounds;
+		end if;
+		
+		await tick;
+	
+	end loop;
+	end var;
+	end var;
+	end var;
+
+]
+end module;
